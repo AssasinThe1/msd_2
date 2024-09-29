@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon-like Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="top-header">
+            <div class="logo">
+                <img src="amaz_logo.jpg" alt="Amazon Logo">
+            </div>
+            <div class="deliver-to">
+                <img src="location_new.png" alt="Location" class="location-icon">
+                <div class="text-stack">
+                    <span>Deliver to Sreeja</span>
+                    <strong>Vadlamudi 522213</strong>
+                </div>
+            </div>
+            <div class="search">
+                <select>
+                    <option>All</option>
+                </select>
+                <input type="text" placeholder="Search Amazon.in">
+                <button class="search-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="right-section">
+                <div class="language">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/1200px-Flag_of_India.svg.png" alt="Indian Flag">
+                    <span>EN</span>
+                </div>
+                <div class="account">
+                    <div class="text-stack">
+                        <span>Hello, Sreeja</span>
+                        <strong>Account & Lists</strong>
+                    </div>
+                </div>
+                <div class="returns">
+                    <div class="text-stack">
+                        <span>Returns</span>
+                        <strong>& Orders</strong>
+                    </div>
+                </div>
+                <div class="cart">
+                    <img src="cart_new.png" alt="Cart" class="cart-icon">
+                    <span>Cart</span>
+                </div>
+            </div>
+        </div>
+        <nav class="bottom-header">
+            <a href="#" onclick="fetchMainCategories()"><i class="fas fa-bars"></i> All</a>
+            <a href="#">Fresh</a>
+            <a href="#">Today's Deals</a>
+            <a href="#">Prime</a>
+            <a href="#">Amazon miniTV</a>
+            <a href="#">Sell</a>
+            <a href="#">Gift Cards</a>
+            <a href="#">Gift Ideas</a>
+            <a href="#">Amazon Pay</a>
+            <a href="#">Buy Again</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <img src="amz_gif.jpg" alt="Hero Image">
+        </section>
+
+        <section class="product-grid" id="product-grid">
+            <!-- Products will be dynamically injected here -->
+        </section>
+
+        <!-- Pagination controls -->
+        <div class="pagination-controls">
+            <button onclick="goToPreviousPage()">Previous</button>
+            <span>Page: <strong id="current-page">1</strong></span>
+            <button onclick="goToNextPage()">Next</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Amazon-like. All rights reserved.</p>
+    </footer>
+
+    <script>
+    // Automatically fetch and display main categories on page load
+    window.onload = function() {
+        fetchMainCategories();
+    };
+
+    // Function to fetch and display main categories with images
+    async function fetchMainCategories() {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/categories');
+            const categories = await response.json();
+
+            const productGrid = document.getElementById('product-grid');
+            productGrid.innerHTML = ''; // Clear existing content
+
+            // Display main categories with images
+            categories.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.classList.add('category-card');
+
+                categoryCard.innerHTML = `
+                    <img src="${category.image}" alt="${category.main_category}" class="category-image">
+                    <h3>${category.main_category}</h3>
+                    <button onclick="fetchSubcategories('${category.main_category}')">View Subcategories</button>
+                `;
+
+                productGrid.appendChild(categoryCard);
+            });
+
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    }
+
+    // Function to fetch and display subcategories for a main category
+    async function fetchSubcategories(mainCategory) {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/subcategories/${mainCategory}`);
+            const subcategories = await response.json();
+
+            const productGrid = document.getElementById('product-grid');
+            productGrid.innerHTML = ''; // Clear existing content
+
+            // Display subcategories with images
+            subcategories.forEach(subcategory => {
+                const subcategoryCard = document.createElement('div');
+                subcategoryCard.classList.add('subcategory-card');
+
+                subcategoryCard.innerHTML = `
+                    <img src="${subcategory.image}" alt="${subcategory.sub_category}" class="subcategory-image">
+                    <h3>${subcategory.sub_category}</h3>
+                    <button onclick="fetchProductsBySubcategory('${subcategory.sub_category}')">View Products</button>
+                `;
+
+                productGrid.appendChild(subcategoryCard);
+            });
+
+        } catch (error) {
+            console.error('Error fetching subcategories:', error);
+        }
+    }
+
+    // Function to fetch and display products for a subcategory
+    async function fetchProductsBySubcategory(subcategory) {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/products/${subcategory}?page=1&page_size=48`);
+            const products = await response.json();
+
+            const productGrid = document.getElementById('product-grid');
+            productGrid.innerHTML = ''; // Clear existing content
+
+            // Display products
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.classList.add('product-card');
+                
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p><strong>Price:</strong> ${product.discount_price} <small><del>${product.actual_price}</del></small></p>
+                    <p><strong>Ratings:</strong> ${product.ratings} (${product.no_of_ratings} reviews)</p>
+                    <a href="${product.link}" target="_blank">View Product</a>
+                `;
+
+                productGrid.appendChild(productCard);
+            });
+
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        }
+    }
+</script>
+
+    
+</body>
+</html>
